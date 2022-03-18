@@ -18,6 +18,7 @@ class TitanicModel(object):
         this.train = this.train.drop('Survived', axis=1)
         # Entity 에서 Object 로 전환
         this = self.drop_feature(this, 'Cabin', 'Parch', 'Ticket', 'SibSp')
+        self.kwargs_sample(name='이순신')
         '''
         this = self.create_train(this)
         this = self.create_label(this)
@@ -91,6 +92,12 @@ class TitanicModel(object):
              survived
         '''
         return this
+
+
+    @staticmethod
+    def kwargs_sample(**kwargs) -> None:
+        [print(''.join(f'key:{i}, val:{j}')) for i, j in kwargs.items()] # key:name, val:이순신
+        return None
 
     @staticmethod
     def pclass_ordinal(this) -> object:
