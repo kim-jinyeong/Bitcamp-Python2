@@ -1,7 +1,8 @@
 from icecream import ic
 from context.models import Model
 from context.domains import Dataset
-
+import pandas as pd
+import numpy as np
 
 class TitanicModel(object):
     model = Model()
@@ -26,11 +27,10 @@ class TitanicModel(object):
         this = self.sex_nominal(this)
         this = self.drop_feature(this, 'Sex')
         this = self.embarked_nominal(this)
+        this = self.age_ratio(this)
+        this = self.drop_feature(this, 'Age')
 
         '''
-        this = self.create_train(this)
-        this = self.create_label(this)
-        this = self.age_ratio(this)
         this = self.pclass_ordinal(this)
         this = self.fare_ratio(this)
         '''
@@ -164,7 +164,18 @@ class TitanicModel(object):
 
     @staticmethod
     def age_ratio(this) -> object:
-
+        train = this.train
+        test = this.test
+        age_mapping = {'Unknown': 0 , 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4,
+                       'Young Adult': 5, 'Adult': 6,  'Senior': 7}
+        train['Age'] = train['Age'].fillna(-0.5)
+        test['Age'] = test['Age'].fillna(-0.5)
+        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
+        labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']
+        for these in train, test:
+            # pd.cut() 을 사용하시오. 다른 곳은 고치지 말고 다음 두 줄만 코딩하시오
+            these['AgeGroup'] = pd.cut(these['Age'], bins, labels=labels)# pd.cut() 을 사용
+            these['AgeGroup'] = these['AgeGroup'].map(age_mapping) # map() 을 사용
         return this
 
     @staticmethod
