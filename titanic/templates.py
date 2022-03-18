@@ -46,7 +46,7 @@ class TitanicTemplate(object):
         this['생존결과'] = this['Survived'] \
             .replace(0, '사망자').replace(1, '생존자')
         this['Pclass'] = this['Pclass'].replace(1, '1등석').replace(2, '2등석').replace(3, '3등석')
-        sns.countplot   (data=this)
+        sns.countplot(data=this)
         model = Model()
         plt.savefig(f'{model.get_sname()}draw_  pclass.png')
 

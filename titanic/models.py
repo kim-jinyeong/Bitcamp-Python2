@@ -17,11 +17,11 @@ class TitanicModel(object):
         this.label = this.train['Survived']
         this.train = this.train.drop('Survived', axis=1)
         # Entity 에서 Object 로 전환
-        this = self.drop_feature(this, that)
+        this = self.drop_feature(this, 'Cabin', 'Parch', 'Ticket', 'SibSp')
         '''
         this = self.create_train(this)
         this = self.create_label(this)
-        this = self.name_nominal(this)
+        this = self.name_nominal(this)  
         this = self.sex_nominal(this)
         this = self.age_ratio(this)
         this = self.embarked_nominal(this)
@@ -68,14 +68,15 @@ class TitanicModel(object):
 
     @staticmethod
     def drop_feature(this, *feature) -> object:
-        this.train = [this.train.drop(i, axis=1) for i in feature]
+        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this.train, this.test]]
+        #this.train = [this.train.drop(i, axis=1) for i in feature]
         '''
         this.train = this.train.drop('SibSp', axis=1)
         this.train = this.train.drop('Parch', axis=1)
         this.train = this.train.drop('Cabin', axis=1)
         this.train = this.train.drop('Ticket', axis=1)
         '''
-        this.test = [this.test.drop(i, axis=1) for i in feature]
+        #this.test = [this.test.drop(i, axis=1) for i in feature]
         '''
         this.test = this.test.drop('SibSp', axis=1)
         this.test = this.test.drop('Parch', axis=1)
