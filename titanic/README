@@ -70,8 +70,8 @@ Some children travelled only with a nanny, therefore parch=0 for them.
 승선항 'Embarked'-->nominal(필요없)
 
 //nominal=> 순서없이 이름만
-//interval=> 구간
 //ordinal=> 순서
+//interval=> 구간
 //ratio=>비율
 
 

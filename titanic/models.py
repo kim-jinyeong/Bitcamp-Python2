@@ -1,6 +1,9 @@
 from icecream import ic
 from context.models import Model
 from context.domains import Dataset
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
@@ -30,14 +33,13 @@ class TitanicModel(object):
         this = self.age_ratio(this)
         this = self.drop_feature(this, 'Age')
         this = self.fare_ratio(this)
-        this = self.drop_feature(this, 'Fare    ')
-
-        '''
+        this = self.drop_feature(this, 'Fare')
         this = self.pclass_ordinal(this)
-
-        '''
         #self.print_this(this)
-        self.df_info(this)
+        #self.df_info(this)
+        k_fold = self.create_k_fold()
+        accuracy = self.get_accuracy(this, k_fold)
+        ic(accuracy)
         return this
 
     @staticmethod
@@ -65,22 +67,6 @@ class TitanicModel(object):
         quantitative -> (숫자)
         interval(상대) vs ratio(절대적인기준)
     '''
-
-    def create_this(self, dataset) -> object:
-        this = dataset
-        this.train = self.train
-        this.tset = self.test
-        this.id = self.id
-        return this
-
-    @staticmethod
-    def create_label(this) -> object:
-        return this
-
-    @staticmethod
-    def create_train(this) -> object:
-        return this
-
     @staticmethod
     def drop_feature(this, *feature) -> object:
         [i.drop(j, axis=1, inplace=True) for j in feature for i in [this.train, this.test]]
@@ -141,14 +127,14 @@ class TitanicModel(object):
         Master
         Mrs
         '''
-        title_mapping = {'Mr': 1, 'Miss': 2, 'Mrs': 3, 'Master': 4, 'Royal': 5, 'Rare': 6}
+        title_mapping = {'Mr': 1, 'Ms': 2, 'Mrs': 3, 'Master': 4, 'Royal': 5, 'Rare': 6}
         return title_mapping
 
     @staticmethod
     def title_nominal(this, title_mapping) -> object:
         for these in [this.train, this.test]:
             these['Title'] = these['Title'].replace(['Countess', 'Lady', 'Sir'], 'Royal')
-            these['Title'] = these['Title'].replace(['Capt','Col','Don','Dr','Major','Rev','Jonkheer','Dona','Mme'], 'Rare')
+            these['Title'] = these['Title'].replace(['Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev', 'Jonkheer', 'Dona', 'Mme'], 'Rare')
             these['Title'] = these['Title'].replace(['Mlle'], 'Mr')
             these['Title'] = these['Title'].replace(['Miss'], 'Ms')
             # Master 는 변화없음
@@ -168,13 +154,12 @@ class TitanicModel(object):
     def age_ratio(this) -> object:
         train = this.train
         test = this.test
-        age_mapping = {'Unknown': 0 , 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4,
+        age_mapping = {'Unknown': 0, 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4,
                        'Young Adult': 5, 'Adult': 6,  'Senior': 7}
-        train['Age'] = train['Age'].fillna(-0.5)
-        test['Age'] = test['Age'].fillna(-0.5)
         bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
         labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']
         for these in train, test:
+            these['Age'] = these['Age'].fillna(-0.5)
             # pd.cut() 을 사용하시오. 다른 곳은 고치지 말고 다음 두 줄만 코딩하시오
             these['AgeGroup'] = pd.cut(these['Age'], bins, labels=labels)# pd.cut() 을 사용
             these['AgeGroup'] = these['AgeGroup'].map(age_mapping) # map() 을 사용
@@ -184,12 +169,11 @@ class TitanicModel(object):
     def fare_ratio(this) -> object:
         train = this.train
         test = this.test
+        fare_mapping = {1, 2, 3, 4}
         bins = [-1, 8, 15, 31, np.inf]
         for these in [train, test]:
-            these.test['Fare'] = these.test['Fare'].fillna(1)
-            these.train['FareBand'] = pd.qcut(these.train['Fare'], 4)
-        # print(f'qcut 으로 bins 값 설정 {this.train["FareBand"].head()}')
-
+            these['Fare'] = these['Fare'].fillna(1)
+            these['FareBand'] = pd.qcut(these['Fare'], 4, labels=fare_mapping)
         return this
 
     @staticmethod
@@ -199,3 +183,12 @@ class TitanicModel(object):
         for these in [this.train, this.test]:
             these['Embarked'] = these['Embarked'].map(embarked_mapping)
         return this
+
+    @staticmethod
+    def create_k_fold() -> object:
+        return KFold(n_splits=10, shuffle=True, random_state=0)
+
+    @staticmethod
+    def get_accuracy(this, k_fold):
+        score = cross_val_score(RandomForestClassifier(), this.train, this.label, cv=k_fold,  n_jobs=1, scoring='accuracy')
+        return round(np.mean(score)*100, 2)
